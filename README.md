@@ -6,19 +6,19 @@ The data spans from 2021 to 2024 quarterly and includes both pre- and post-inter
 Variable Description
 Programme Design Variables:
 - Treatment: Classified based on intervened or not.
- - 1 = District received fortification intervention
- - 0 = Control district
+  - 1 = District received fortification intervention
+  - 0 = Control district
 - Post Intervention:
- - 1 = After programme rollout (from 2022-Q3 onward)
- - 0 = Before intervention
+  - 1 = After programme rollout (from 2022-Q3 onward)
+  - 0 = Before intervention
 - Health & Nutrition Outcomes:
- - Anaemia Prevalence Pct: Percentage of population with anaemia in the district.
- - Avg Hb Level Gdl: Average haemoglobin level (g/dL), indicating nutritional status.
- - Child Stunting Rate Pct: Percentage of children with stunted growth (chronic malnutrition).
+  - Anaemia Prevalence Pct: Percentage of population with anaemia in the district.
+  - Avg Hb Level Gdl: Average haemoglobin level (g/dL), indicating nutritional status.
+  - Child Stunting Rate Pct: Percentage of children with stunted growth (chronic malnutrition).
 - Programme Implementation Indicators:
- - Fortified Flour Coverage Pct: Percentage of population consuming fortified wheat flour.
- - Compliant Mills Count: Number of mills adhering to fortification standards.
- - Awareness Score: Composite score (0–100) measuring community awareness about nutrition and fortification.
+  - Fortified Flour Coverage Pct: Percentage of population consuming fortified wheat flour.
+  - Compliant Mills Count: Number of mills adhering to fortification standards.
+  - Awareness Score: Composite score (0–100) measuring community awareness about nutrition and fortification.
 - Programme Reach Beneficiaries: Estimated number of individuals reached by the intervention in a given district-quarter. 
 
 
