@@ -1,6 +1,8 @@
 # Anaemia Impact Analysis
 Causal analysis of anaemia reduction using Difference-in-Differences on district-level nutrition data, with interactive visualizations.
 
+The dashboard is visible at [Dashboard](https://aiswaryalakshmii.github.io/Anaemia-Impact-Analysis/). 
+
 The file `fortification_dataset.xlsx` is a synthetic, district-level nutrition and health outcomes dataset across selected states of India, namely, Maharashtra, Rajasthan, Uttar Pradesh, Madhya Pradesh, and Bihar. It is designed to evaluate the impact of a wheat flour fortification programme implemented in the states. 
 The data spans from 2021 to 2024 quarterly and includes both pre- and post-intervention periods, making it suitable for causal analysis techniques such as Difference-in-Differences (DiD). It covers 5 States and 40 Districts with a total of 640 observations.  
 Variable Description
@@ -21,6 +23,6 @@ Programme Design Variables:
   - Awareness Score: Composite score (0–100) measuring community awareness about nutrition and fortification.
 - Programme Reach Beneficiaries: Estimated number of individuals reached by the intervention in a given district-quarter. 
 
-The file `Dashboard.html` is the visualization that explains the variablity across states and pre- and post-intervention through Difference-in-Differences. It subtly shows the effectiveness and impact of the implemented programme.
+The file `index.html` is the visualization code that explains the variablity across states and pre- and post-intervention through Difference-in-Differences. It subtly shows the effectiveness and impact of the implemented programme.
 
 _N.B: This is a synthetic dataset created for analytical and demonstration purposes. Values are generated to reflect realistic trends but do not represent actual field data._
