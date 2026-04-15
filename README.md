@@ -1,4 +1,4 @@
-# Anaemia-Impact-Analysis
+# Anaemia Impact Analysis
 Causal analysis of anaemia reduction using Difference-in-Differences on district-level nutrition data, with interactive visualizations.
 
 The file `fortification_dataset.xlsx` is a synthetic, district-level nutrition and health outcomes dataset across selected states of India, namely, Maharashtra, Rajasthan, Uttar Pradesh, Madhya Pradesh, and Bihar. It is designed to evaluate the impact of a wheat flour fortification programme implemented in the states. 
