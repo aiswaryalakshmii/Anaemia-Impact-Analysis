@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Fortify Health — Wheat Flour Fortification Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --bg2: #f7f7f5;
+    --bg3: #f0efea;
+    --text: #1a1a18;
+    --text2: #5f5e5a;
+    --text3: #888780;
+    --border: rgba(0,0,0,0.1);
+    --border2: rgba(0,0,0,0.18);
+    --teal: #1D9E75;
+    --coral: #D85A30;
+    --blue: #378ADD;
+    --purple: #7F77DD;
+    --amber: #BA7517;
+    --green-light: rgba(29,158,117,0.1);
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e1e1c;
+      --bg2: #262624;
+      --bg3: #2e2e2b;
+      --text: #f0efe8;
+      --text2: #b4b2a9;
+      --text3: #888780;
+      --border: rgba(255,255,255,0.1);
+      --border2: rgba(255,255,255,0.18);
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg3);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  .page-header {
+    background: var(--bg);
+    border-bottom: 0.5px solid var(--border);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .page-header h1 { font-size: 16px; font-weight: 500; color: var(--text); }
+  .page-header p  { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+  .badge {
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: var(--radius-md);
+    background: #E1F5EE;
+    color: #0F6E56;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .badge { background: #085041; color: #9FE1CB; }
+  }
+
+  .main { max-width: 1200px; margin: 0 auto; padding: 24px 24px 48px; }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: var(--bg);
+    border-radius: var(--radius-lg);
+    border: 0.5px solid var(--border);
+  }
+
+  .f-group { display: flex; flex-direction: column; gap: 4px; }
+  .f-group label { font-size: 11px; color: var(--text2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  select {
+    font-size: 13px;
+    padding: 7px 12px;
+    border-radius: var(--radius-md);
+    border: 0.5px solid var(--border2);
+    background: var(--bg2);
+    color: var(--text);
+    min-width: 150px;
+    cursor: pointer;
+    outline: none;
+  }
+
+  select:focus { border-color: var(--teal); box-shadow: 0 0 0 2px rgba(29,158,117,0.2); }
+
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 700px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+
+  .kpi {
+    background: var(--bg);
+    border-radius: var(--radius-lg);
+    border: 0.5px solid var(--border);
+    padding: 16px 18px;
+  }
+
+  .kpi .klabel { font-size: 11px; color: var(--text2); margin-bottom: 6px; }
+  .kpi .kval   { font-size: 26px; font-weight: 500; color: var(--text); line-height: 1; }
+  .kpi .kdelta { font-size: 11px; margin-top: 5px; }
+  .kpi .kdelta.pos { color: #0F6E56; }
+  .kpi .kdelta.neg { color: #A32D2D; }
+
+  .charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  @media (max-width: 800px) { .charts-grid { grid-template-columns: 1fr; } }
+
+  .chart-card {
+    background: var(--bg);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+  }
+
+  .chart-full { grid-column: 1 / -1; }
+
+  .chart-card h3  { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+  .chart-card p   { font-size: 11px; color: var(--text2); margin-bottom: 12px; }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 10px;
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  .legend span   { display: flex; align-items: center; gap: 5px; }
+  .leg-dot       { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  .intervention-label {
+    font-size: 10px;
+    color: var(--text3);
+    text-align: center;
+    margin-top: 4px;
+  }
+
+  footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text3);
+    padding: 32px 24px 16px;
+  }
+</style>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+</head>
+<body>
+
+<header class="page-header">
+  <div>
+    <h1>Fortify Health — Wheat Flour Fortification Programme</h1>
+    <p>District-level anaemia &amp; nutrition outcomes · India · 2021–2024</p>
+  </div>
+  <span class="badge">640 observations · 5 states · 40 districts</span>
+</header>
+
+<main class="main">
+
+  <div class="filters">
+    <div class="f-group">
+      <label>State</label>
+      <select id="fState">
+        <option value="All">All states</option>
+        <option>Maharashtra</option>
+        <option>Rajasthan</option>
+        <option>Uttar Pradesh</option>
+        <option>Madhya Pradesh</option>
+        <option>Bihar</option>
+      </select>
+    </div>
+    <div class="f-group">
+      <label>Year</label>
+      <select id="fYear">
+        <option value="All">All years</option>
+        <option>2021</option><option>2022</option><option>2023</option><option>2024</option>
+      </select>
+    </div>
+    <div class="f-group">
+      <label>Group</label>
+      <select id="fGroup">
+        <option value="All">Treatment + Control</option>
+        <option value="1">Treatment only</option>
+        <option value="0">Control only</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="klabel">Avg anaemia prevalence</div><div class="kval" id="kAnaemia">—</div><div class="kdelta" id="dAnaemia"></div></div>
+    <div class="kpi"><div class="klabel">Avg haemoglobin (g/dL)</div><div class="kval" id="kHb">—</div><div class="kdelta" id="dHb"></div></div>
+    <div class="kpi"><div class="klabel">Fortified flour coverage</div><div class="kval" id="kCov">—</div><div class="kdelta" id="dCov"></div></div>
+    <div class="kpi"><div class="klabel">Total beneficiaries</div><div class="kval" id="kReach">—</div><div class="kdelta" id="dReach"></div></div>
+  </div>
+
+  <div class="charts-grid">
+
+    <div class="chart-card chart-full">
+      <h3>Anaemia prevalence over time — treatment vs control</h3>
+      <p>Fortification intervention rolled out from 2022-Q3 · divergence signals programme effect</p>
+      <div class="legend">
+        <span><span class="leg-dot" style="background:#1D9E75"></span>Treatment districts</span>
+        <span><span class="leg-dot" style="background:#D85A30;border:1.5px dashed #D85A30;background:transparent"></span>Control districts</span>
+      </div>
+      <div style="position:relative;width:100%;height:280px">
+        <canvas id="c1" role="img" aria-label="Line chart showing anaemia prevalence diverging between treatment and control districts after 2022 Q3">Treatment districts show faster decline in anaemia from 2022-Q3 onward.</canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <h3>State-wise average anaemia rate</h3>
+      <p>Bihar and Uttar Pradesh carry the highest burden</p>
+      <div style="position:relative;width:100%;height:280px">
+        <canvas id="c2" role="img" aria-label="Horizontal bar chart comparing anaemia rates across five Indian states">Bihar highest at ~58%, Maharashtra lowest at ~40%.</canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <h3>Haemoglobin trend by state</h3>
+      <p>Rising Hb levels indicate nutritional recovery across all states</p>
+      <div class="legend" id="hbLegend"></div>
+      <div style="position:relative;width:100%;height:240px">
+        <canvas id="c3" role="img" aria-label="Multi-line chart of haemoglobin levels by state from 2021 to 2024">All states show upward haemoglobin trend from 2022 onward.</canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <h3>Flour coverage vs anaemia prevalence</h3>
+      <p>Each point = one district-quarter · higher coverage drives anaemia down</p>
+      <div class="legend">
+        <span><span class="leg-dot" style="background:rgba(29,158,117,0.7)"></span>Treatment (circles)</span>
+        <span><span class="leg-dot" style="background:rgba(216,90,48,0.7)"></span>Control (triangles)</span>
+      </div>
+      <div style="position:relative;width:100%;height:240px">
+        <canvas id="c4" role="img" aria-label="Scatter plot showing negative correlation between flour coverage and anaemia prevalence">Higher flour coverage correlates strongly with lower anaemia rates.</canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <h3>Compliant mills &amp; awareness over time</h3>
+      <p>Mill compliance and community awareness rising in treatment districts</p>
+      <div class="legend">
+        <span><span class="leg-dot" style="background:#7F77DD"></span>Avg awareness score (treatment)</span>
+        <span><span class="leg-dot" style="background:#BA7517"></span>Avg awareness score (control)</span>
+      </div>
+      <div style="position:relative;width:100%;height:240px">
+        <canvas id="c5" role="img" aria-label="Line chart of community awareness scores over time for treatment and control groups">Treatment group awareness rises faster post-intervention.</canvas>
+      </div>
+    </div>
+
+    <div class="chart-card chart-full">
+      <h3>Programme reach — annual beneficiaries by state</h3>
+      <p>Total beneficiaries reached per year, stacked by state · showing programme scale-up</p>
+      <div class="legend" id="reachLegend"></div>
+      <div style="position:relative;width:100%;height:260px">
+        <canvas id="c6" role="img" aria-label="Stacked bar chart showing total programme beneficiaries per year broken down by state">Beneficiary reach growing each year across all five states.</canvas>
+      </div>
+    
+<div class="chart-card chart-full">
+  <h3>Geographic coverage — beneficiaries & anaemia</h3>
+  <p>Bubble size = beneficiaries · color = anaemia prevalence</p>
+  <div id="map" style="height: 400px; border-radius: 12px;"></div>
+</div>
+
+
+  </div>
+</main>
+
+<script>
+const states = ["Maharashtra","Rajasthan","Uttar Pradesh","Madhya Pradesh","Bihar"];
+const districtsByState = {
+  "Maharashtra":["Pune","Nashik","Ahmednagar","Solapur","Kolhapur","Aurangabad","Amravati","Latur"],
+  "Rajasthan":["Jaipur","Jodhpur","Udaipur","Kota","Ajmer","Bikaner","Alwar","Bharatpur"],
+  "Uttar Pradesh":["Lucknow","Varanasi","Agra","Kanpur","Allahabad","Gorakhpur","Meerut","Bareilly"],
+  "Madhya Pradesh":["Bhopal","Indore","Gwalior","Jabalpur","Ujjain","Sagar","Rewa","Satna"],
+  "Bihar":["Patna","Gaya","Muzaffarpur","Bhagalpur","Darbhanga","Purnia","Ara","Begusarai"]
+};
+const baseAnaemia = {"Maharashtra":42,"Rajasthan":52,"Uttar Pradesh":56,"Madhya Pradesh":54,"Bihar":60};
+const baseHb      = {"Maharashtra":10.8,"Rajasthan":10.2,"Uttar Pradesh":9.9,"Madhya Pradesh":10.1,"Bihar":9.7};
+const stateColors = {"Maharashtra":"#1D9E75","Rajasthan":"#378ADD","Uttar Pradesh":"#D85A30","Madhya Pradesh":"#7F77DD","Bihar":"#BA7517"};
+const stateDash   = {"Maharashtra":[],"Rajasthan":[6,3],"Uttar Pradesh":[2,2],"Madhya Pradesh":[8,4],"Bihar":[4,2]};
+const timePeriods = ["2021-Q1","2021-Q2","2021-Q3","2021-Q4","2022-Q1","2022-Q2","2022-Q3","2022-Q4","2023-Q1","2023-Q2","2023-Q3","2023-Q4","2024-Q1","2024-Q2","2024-Q3","2024-Q4"];
+
+function seededRand(seed){let s=seed;return()=>{s=(s*16807)%2147483647;return(s-1)/2147483646}}
+
+const RAW=[];
+for(const st of states){
+  const dists=districtsByState[st];
+  for(let di=0;di<dists.length;di++){
+    const treatment=di%2===0?1:0;
+    const rng=seededRand(states.indexOf(st)*100+di*10+7);
+    for(const yr of [2021,2022,2023,2024]){
+      for(const q of [1,2,3,4]){
+        const t=(yr-2021)*4+(q-1);
+        const post=(yr>2022||(yr===2022&&q>=3))?1:0;
+        const an=Math.max(25,Math.min(75,baseAnaemia[st]-t*0.4-treatment*post*(2.5+t*0.3)+(rng()-0.5)*3));
+        const hb=Math.max(8.5,Math.min(13,baseHb[st]+t*0.02+treatment*post*(0.12+t*0.015)+(rng()-0.5)*0.2));
+        const cov=Math.max(5,Math.min(95,10+t*2+treatment*post*(5+t*1.5)+(rng()-0.5)*6));
+        const awareness=Math.max(20,Math.min(100,30+t*2+treatment*post*10+(rng()-0.5)*10));
+        const stunting=Math.max(10,Math.min(50,28-t*0.3-treatment*post*1.2+(rng()-0.5)*3));
+        const reach=Math.round(5000+treatment*2000+post*treatment*3000+(rng()-0.5)*2000);
+        const mills=Math.round(3+treatment*2+post*treatment*3+rng()*2);
+        RAW.push({state:st,district:dists[di],year:yr,quarter:`Q${q}`,tp:`${yr}-Q${q}`,treatment,post,
+          an:+an.toFixed(1),hb:+hb.toFixed(2),cov:+cov.toFixed(1),
+          awareness:+awareness.toFixed(1),stunting:+stunting.toFixed(1),reach,mills});
+      }
+    }
+  }
+}
+
+
+const districtCoords = {
+  "Pune":[18.52,73.85],"Nashik":[19.99,73.79],"Ahmednagar":[19.09,74.74],"Solapur":[17.67,75.91],
+  "Kolhapur":[16.70,74.24],"Aurangabad":[19.88,75.34],"Amravati":[20.93,77.75],"Latur":[18.40,76.56],
+  "Jaipur":[26.91,75.79],"Jodhpur":[26.23,73.02],"Udaipur":[24.58,73.68],"Kota":[25.21,75.86],
+  "Ajmer":[26.45,74.64],"Bikaner":[28.02,73.31],"Alwar":[27.55,76.63],"Bharatpur":[27.22,77.49],
+  "Lucknow":[26.85,80.95],"Varanasi":[25.31,82.97],"Agra":[27.18,78.01],"Kanpur":[26.45,80.33],
+  "Allahabad":[25.44,81.84],"Gorakhpur":[26.76,83.37],"Meerut":[28.98,77.71],"Bareilly":[28.36,79.43],
+  "Bhopal":[23.25,77.41],"Indore":[22.72,75.86],"Gwalior":[26.22,78.18],"Jabalpur":[23.18,79.95],
+  "Ujjain":[23.18,75.78],"Sagar":[23.83,78.74],"Rewa":[24.53,81.30],"Satna":[24.58,80.83],
+  "Patna":[25.59,85.13],"Gaya":[24.79,85.00],"Muzaffarpur":[26.12,85.39],"Bhagalpur":[25.25,86.98],
+  "Darbhanga":[26.15,85.90],"Purnia":[25.78,87.47],"Ara":[25.56,84.67],"Begusarai":[25.42,86.13]
+};
+
+function buildMap(data){
+  if(window.mapInstance){
+    window.mapInstance.remove();
+  }
+
+  const map = L.map('map').setView([23.5, 80], 5);
+  window.mapInstance = map;
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© OpenStreetMap'
+  }).addTo(map);
+
+  data.forEach(r=>{
+    if(!districtCoords[r.district]) return;
+
+    const [lat,lng] = districtCoords[r.district];
+
+    const size = Math.sqrt(r.reach) / 10;
+
+    const color = r.an > 55 ? "#D85A30" :
+                  r.an > 45 ? "#BA7517" :
+                              "#1D9E75";
+
+    const popupId = `popup-${r.district}-${r.year}-${r.quarter}`;
+
+    const marker = L.circleMarker([lat,lng],{
+      radius: size,
+      fillColor: color,
+      color: "#333",
+      weight: 0.5,
+      fillOpacity: 0.7
+    }).addTo(map);
+
+    marker.bindPopup(`
+      <div style="width:180px">
+        <b>${r.district}, ${r.state}</b><br>
+        Anaemia: ${r.an}%<br>
+        Coverage: ${r.cov}%<br>
+        <canvas id="${popupId}" width="150" height="150"></canvas>
+      </div>
+    `);
+
+    marker.on('popupopen', function () {
+      const ctx = document.getElementById(popupId);
+      if(!ctx) return;
+
+      new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: ['Anaemic','Non-Anaemic'],
+          datasets: [{
+            data: [r.an, 100 - r.an],
+            backgroundColor: ['#D85A30','#1D9E75']
+          }]
+        },
+        options: {
+          plugins:{legend:{display:false}},
+        }
+      });
+    });
+  });
+}
+
+
+const charts={};
+function destroyAll(){Object.values(charts).forEach(c=>c.destroy());for(const k in charts)delete charts[k];}
+function avg(arr,k){return arr.length?arr.reduce((s,r)=>s+r[k],0)/arr.length:0}
+function sum(arr,k){return arr.reduce((s,r)=>s+r[k],0)}
+function fmtK(v){return v>=1e6?(v/1e6).toFixed(1)+'M':v>=1000?Math.round(v/1000)+'K':String(v)}
+
+function filtered(){
+  const st=document.getElementById('fState').value;
+  const yr=document.getElementById('fYear').value;
+  const gr=document.getElementById('fGroup').value;
+  return RAW.filter(r=>(st==='All'||r.state===st)&&(yr==='All'||r.year===+yr)&&(gr==='All'||r.treatment===+gr));
+}
+
+function updateKPIs(data){
+  const a=avg(data,'an'),h=avg(data,'hb'),c=avg(data,'cov'),reach=sum(data,'reach');
+  document.getElementById('kAnaemia').textContent=a.toFixed(1)+'%';
+  document.getElementById('kHb').textContent=h.toFixed(2);
+  document.getElementById('kCov').textContent=c.toFixed(1)+'%';
+  document.getElementById('kReach').textContent=fmtK(reach);
+  const pre=data.filter(r=>r.post===0),post=data.filter(r=>r.post===1);
+  function delta(k,dir,unit=''){
+    if(!pre.length||!post.length){return '';}
+    const d=avg(post,k)-avg(pre,k);
+    const sign=d>=0?'+':'';
+    const good=((d<0&&dir==='down')||(d>0&&dir==='up'));
+    return `<span class="kdelta ${good?'pos':'neg'}">${sign}${d.toFixed(1)}${unit} vs pre-intervention</span>`;
+  }
+  document.getElementById('dAnaemia').innerHTML=delta('an','down','%');
+  document.getElementById('dHb').innerHTML=delta('hb','up',' g/dL');
+  document.getElementById('dCov').innerHTML=delta('cov','up','%');
+  document.getElementById('dReach').innerHTML='';
+}
+
+const gridColor='rgba(128,128,128,0.12)';
+const tickFont={size:10};
+
+function buildC1(data){
+  const trt=timePeriods.map(tp=>{const d=data.filter(r=>r.tp===tp&&r.treatment===1);return d.length?+avg(d,'an').toFixed(1):null});
+  const ctrl=timePeriods.map(tp=>{const d=data.filter(r=>r.tp===tp&&r.treatment===0);return d.length?+avg(d,'an').toFixed(1):null});
+  charts.c1=new Chart(document.getElementById('c1'),{
+    type:'line',
+    data:{labels:timePeriods,datasets:[
+      {label:'Treatment',data:trt,borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.08)',tension:0.35,borderWidth:2.5,pointRadius:3,fill:true},
+      {label:'Control',data:ctrl,borderColor:'#D85A30',backgroundColor:'transparent',tension:0.35,borderWidth:2.5,borderDash:[7,4],pointRadius:3}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y}%`}},
+        annotation:{annotations:{vline:{type:'line',xMin:6,xMax:6,borderColor:'rgba(100,100,100,0.5)',borderWidth:1.5,borderDash:[5,4],label:{content:'Intervention start',enabled:true,position:'start',font:{size:10}}}}}
+      },
+      scales:{
+        x:{ticks:{font:tickFont,maxRotation:45,autoSkip:false},grid:{color:gridColor}},
+        y:{title:{display:true,text:'Anaemia prevalence (%)',font:{size:10}},ticks:{font:tickFont,callback:v=>v+'%'},grid:{color:gridColor}}
+      }}
+  });
+}
+
+function buildC2(data){
+  const stData=states.map(s=>{const d=data.filter(r=>r.state===s);return d.length?+avg(d,'an').toFixed(1):0});
+  charts.c2=new Chart(document.getElementById('c2'),{
+    type:'bar',
+    data:{labels:states,datasets:[{label:'Avg anaemia %',data:stData,backgroundColor:states.map(s=>stateColors[s]),borderRadius:5,borderSkipped:false}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.parsed.x.toFixed(1)}%`}}},
+      scales:{x:{title:{display:true,text:'Anaemia prevalence (%)',font:{size:10}},ticks:{font:tickFont,callback:v=>v+'%'},grid:{color:gridColor}},
+        y:{ticks:{font:{size:11}},grid:{display:false}}}}
+  });
+}
+
+function buildC3(data){
+  const stFilter=document.getElementById('fState').value;
+  const activeStates=stFilter==='All'?states:[stFilter];
+  document.getElementById('hbLegend').innerHTML=activeStates.map(s=>`<span><span class="leg-dot" style="background:${stateColors[s]}"></span>${s}</span>`).join('');
+  const datasets=activeStates.map(s=>({
+    label:s,
+    data:timePeriods.map(tp=>{const d=data.filter(r=>r.state===s&&r.tp===tp);return d.length?+avg(d,'hb').toFixed(2):null}),
+    borderColor:stateColors[s],backgroundColor:'transparent',tension:0.35,borderWidth:2,borderDash:stateDash[s],pointRadius:2
+  }));
+  charts.c3=new Chart(document.getElementById('c3'),{
+    type:'line',data:{labels:timePeriods,datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y} g/dL`}}},
+      scales:{x:{ticks:{font:tickFont,maxRotation:45,autoSkip:true},grid:{color:gridColor}},
+        y:{title:{display:true,text:'Haemoglobin (g/dL)',font:{size:10}},ticks:{font:tickFont},grid:{color:gridColor}}}}
+  });
+}
+
+function buildC4(data){
+  const sample=data.filter((_,i)=>i%2===0);
+  charts.c4=new Chart(document.getElementById('c4'),{
+    type:'scatter',
+    data:{datasets:[
+      {label:'Treatment',data:sample.filter(r=>r.treatment===1).map(r=>({x:+r.cov.toFixed(1),y:+r.an.toFixed(1)})),backgroundColor:'rgba(29,158,117,0.45)',pointRadius:4,pointStyle:'circle'},
+      {label:'Control',data:sample.filter(r=>r.treatment===0).map(r=>({x:+r.cov.toFixed(1),y:+r.an.toFixed(1)})),backgroundColor:'rgba(216,90,48,0.45)',pointRadius:4,pointStyle:'triangle'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label} · Coverage: ${ctx.parsed.x}% · Anaemia: ${ctx.parsed.y}%`}}},
+      scales:{x:{title:{display:true,text:'Fortified flour coverage (%)',font:{size:10}},ticks:{font:tickFont,callback:v=>v+'%'},min:0,max:100,grid:{color:gridColor}},
+        y:{title:{display:true,text:'Anaemia prevalence (%)',font:{size:10}},ticks:{font:tickFont,callback:v=>v+'%'},min:20,max:75,grid:{color:gridColor}}}}
+  });
+}
+
+function buildC5(data){
+  const trtData=timePeriods.map(tp=>{const d=data.filter(r=>r.tp===tp&&r.treatment===1);return d.length?+avg(d,'awareness').toFixed(1):null});
+  const ctrlData=timePeriods.map(tp=>{const d=data.filter(r=>r.tp===tp&&r.treatment===0);return d.length?+avg(d,'awareness').toFixed(1):null});
+  charts.c5=new Chart(document.getElementById('c5'),{
+    type:'line',
+    data:{labels:timePeriods,datasets:[
+      {label:'Treatment awareness',data:trtData,borderColor:'#7F77DD',backgroundColor:'rgba(127,119,221,0.08)',tension:0.35,borderWidth:2.5,pointRadius:3,fill:true},
+      {label:'Control awareness',data:ctrlData,borderColor:'#BA7517',backgroundColor:'transparent',tension:0.35,borderWidth:2.5,borderDash:[6,3],pointRadius:3}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y}`}}},
+      scales:{x:{ticks:{font:tickFont,maxRotation:45,autoSkip:true},grid:{color:gridColor}},
+        y:{title:{display:true,text:'Awareness score (0–100)',font:{size:10}},ticks:{font:tickFont},min:20,max:80,grid:{color:gridColor}}}}
+  });
+}
+
+function buildC6(data){
+  const stFilter=document.getElementById('fState').value;
+  const activeStates=stFilter==='All'?states:[stFilter];
+  document.getElementById('reachLegend').innerHTML=activeStates.map(s=>`<span><span class="leg-dot" style="background:${stateColors[s]}"></span>${s}</span>`).join('');
+  charts.c6=new Chart(document.getElementById('c6'),{
+    type:'bar',
+    data:{labels:['2021','2022','2023','2024'],
+      datasets:activeStates.map(s=>({
+        label:s,
+        data:[2021,2022,2023,2024].map(yr=>sum(data.filter(r=>r.state===s&&r.year===yr),'reach')),
+        backgroundColor:stateColors[s],borderRadius:3,borderSkipped:false
+      }))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${fmtK(ctx.parsed.y)}`}}},
+      scales:{x:{stacked:true,ticks:{font:{size:11}},grid:{display:false}},
+        y:{stacked:true,ticks:{font:tickFont,callback:v=>fmtK(v)},title:{display:true,text:'Beneficiaries reached',font:{size:10}},grid:{color:gridColor}}}}
+  });
+}
+
+function render(){
+  destroyAll();
+  const data=filtered();
+  updateKPIs(data);
+  buildC1(data);
+  buildC2(data);
+  buildC3(data);
+  buildC4(data);
+  buildC5(data);
+  buildC6(data);
+  buildMap(data);
+}
+
+['fState','fYear','fGroup'].forEach(id=>document.getElementById(id).addEventListener('change',render));
+render();
+</script>
+</body>
+</html>
