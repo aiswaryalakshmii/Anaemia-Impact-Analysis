@@ -21,5 +21,6 @@ Programme Design Variables:
   - Awareness Score: Composite score (0–100) measuring community awareness about nutrition and fortification.
 - Programme Reach Beneficiaries: Estimated number of individuals reached by the intervention in a given district-quarter. 
 
+The file `Dashboard.html` is the visualization that explains the variablity across states and pre- and post-intervention through Difference-in-Differneces. It subtly shows the effectiveness and impact of the implemented programme.
 
 _N.B: This is a synthetic dataset created for analytical and demonstration purposes. Values are generated to reflect realistic trends but do not represent actual field data._
